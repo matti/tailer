@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"os/signal"
+	"strings"
 	"syscall"
 
 	"github.com/hpcloud/tail"
@@ -22,15 +23,26 @@ func main() {
 
 	output := make(chan string)
 
-	for _, fileName := range os.Args[1:] {
+	for _, name := range os.Args[1:] {
+		var fileName string
+		var prefix string
+		if strings.Contains(name, ":") {
+			parts := strings.Split(name, ":")
+			fileName = parts[0]
+			prefix = parts[1]
+		} else {
+			fileName = name
+			prefix = name
+		}
+
 		t, err := tail.TailFile(fileName, cfg)
 		if err != nil {
 			panic(err)
 		}
 
-		go func(fileName string) {
-			reader(fileName, t, cfg, output)
-		}(fileName)
+		go func(prefix string, fileName string) {
+			reader(prefix, fileName, t, cfg, output)
+		}(prefix, fileName)
 	}
 
 	for {
@@ -43,8 +55,8 @@ func main() {
 	}
 }
 
-func reader(fileName string, t *tail.Tail, cfg tail.Config, output chan string) {
+func reader(prefix string, fileName string, t *tail.Tail, cfg tail.Config, output chan string) {
 	for line := range t.Lines {
-		output <- (fileName + ": " + line.Text)
+		output <- (prefix + ": " + line.Text)
 	}
 }
