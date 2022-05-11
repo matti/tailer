@@ -17,3 +17,9 @@ custom prefixes
       t1: hello
       t2: world
       t1: agin
+      
+      
+## install
+
+```Dockerfile
+COPY --from=ghcr.io/matti/tailer /tailer /usr/local/bin
